@@ -1,0 +1,8 @@
+# File Universe Explorer - Python 3.12+ on Windows 10/11
+PyQt6>=6.5
+PyOpenGL>=3.1.7
+numpy>=1.26
+Pillow>=10.1
+psutil>=5.9
+# Optional (not a pip package): ffmpeg/ffprobe on PATH enables video frames and
+# waveforms for non-WAV audio. Without it, Explorer thumbnails / generic visuals are used.
