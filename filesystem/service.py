@@ -186,10 +186,19 @@ class ScanService(QObject):
             self._size_current = path
 
             def progress(partial: SizeResult, current: str, _g=gen, _p=path):
-                safe_emit(self._size_done, _g, _p, partial, False)
+                self._emit_size(_g, _p, partial, False)
 
             res = compute_tree_size(path, cancel, self.size_cache, progress, root_mtime=mtime)
-            safe_emit(self._size_done, gen, path, res, not cancel.is_set())
+            self._emit_size(gen, path, res, not cancel.is_set())
+
+    def _emit_size(self, *args) -> None:
+        if self._stop:
+            return
+        try:
+            # looking up the signal itself raises once Qt has deleted this object at exit
+            safe_emit(self._size_done, *args)
+        except RuntimeError:
+            pass
 
     def _on_size(self, gen: int, path: str, res: SizeResult, final: bool) -> None:
         if gen != self._size_generation:
