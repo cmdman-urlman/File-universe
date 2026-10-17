@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from PyQt6.QtCore import QAbstractListModel, QModelIndex, QSize, QSortFilterProxyModel, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont
-from PyQt6.QtWidgets import (QAbstractItemView, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem,
+from PyQt6.QtWidgets import (QAbstractItemView, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu,
                              QSplitter, QVBoxLayout, QWidget)
+
+from devices.eject import can_eject
 
 from universe.mapping import format_size
 
@@ -79,6 +81,7 @@ class Sidebar(QWidget):
     device_activated = pyqtSignal(object)        # DeviceInfo or None (home)
     object_selected = pyqtSignal(int, object)    # scene index (or negative), payload
     object_activated = pyqtSignal(int, object)
+    eject_requested = pyqtSignal(object)         # DeviceInfo
 
     def __init__(self, pixmaps, parent=None):
         super().__init__(parent)
@@ -98,6 +101,8 @@ class Sidebar(QWidget):
         self.devices.setIconSize(QSize(28, 28))
         self.devices.itemClicked.connect(self._device_clicked)
         self.devices.itemActivated.connect(self._device_clicked)
+        self.devices.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.devices.customContextMenuRequested.connect(self._device_menu)
         tl.addWidget(self.devices)
         split.addWidget(top)
 
@@ -147,7 +152,8 @@ class Sidebar(QWidget):
                 sub = f"{d.kind_label} · {d.error or 'not ready'}"
             item = QListWidgetItem(self.pixmaps.icon("drive:" + d.mount), f"{d.title}\n{sub}")
             item.setData(Qt.ItemDataRole.UserRole, d)
-            item.setToolTip(f"{d.mount}  {d.fstype}  {d.bus} {d.media}".strip())
+            tip = f"{d.mount}  {d.fstype}  {d.bus} {d.media}".strip()
+            item.setToolTip(tip + ("\nRight-click to safely remove" if can_eject(d) else ""))
             if not d.ready:
                 item.setForeground(QColor(120, 120, 130))
             self.devices.addItem(item)
@@ -160,6 +166,18 @@ class Sidebar(QWidget):
     def _device_clicked(self, item) -> None:
         d = item.data(Qt.ItemDataRole.UserRole)
         self.device_activated.emit(d)
+
+    def _device_menu(self, pos) -> None:
+        item = self.devices.itemAt(pos)
+        d = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        if d is None:
+            return
+        menu = QMenu(self)
+        menu.addAction("Open", lambda: self.device_activated.emit(d))
+        eject = menu.addAction("⏏ Eject disc" if d.kind == "disc" else "⏏ Safely remove",
+                               lambda: self.eject_requested.emit(d))
+        eject.setEnabled(can_eject(d))
+        menu.exec(self.devices.viewport().mapToGlobal(pos))
 
     # ---- objects -------------------------------------------------------------
     def set_scene(self, scene, extra_nodes=None) -> None:

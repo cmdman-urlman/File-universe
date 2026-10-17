@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="File Universe Explorer turns your Windows drives and folders into a navigable 3D universe.">
+<title>File Universe Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="wrap bar">
+  <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>File Universe Explorer</a>
+  <nav aria-label="Sections">
+    <a href="#depths">Depths</a>
+    <a href="#scale">Scale</a>
+    <a href="#features">Features</a>
+    <a href="#controls">Controls</a>
+    <a href="#setup">Install</a>
+  </nav>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <p class="eyebrow">For Windows 10 &amp; 11</p>
+      <h1>Your drives are <em>universes</em>. Fly into them.</h1>
+      <p class="lede">File Universe Explorer turns your real disks into a navigable 3D cosmos. Folders become galaxies, star clusters, planets and moons. Files are the stars around them. Every name, size and path on screen comes straight from your disk.</p>
+      <div class="path-demo" aria-label="Example: a path mapped to cosmic objects"><b>C:\</b> universe › <b>Users</b> galaxy › <b>you</b> nebula › <b>Pictures</b> star cluster › <b>2024</b> planetary system</div>
+      <div class="cta">
+        <a class="btn primary" href="#setup">Install in two commands</a>
+        <a class="btn" href="https://github.com/cmdman-urlman/File-universe" target="_blank" rel="noopener">Source on GitHub</a>
+      </div>
+    </div>
+    <div class="galaxy-frame">
+      <canvas id="galaxy" aria-label="Animated spiral galaxy: the folders of C:\Users drawn as labelled stars sized by folder size" role="img"></canvas>
+      <p class="galaxy-caption">C:\Users at depth 1 · star size = folder size</p>
+    </div>
+  </div>
+
+  <section id="depths">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">How the filesystem maps to the cosmos</p>
+        <h2>Every folder level is a different scale of space</h2>
+        <p class="lede">The deeper a folder sits below the drive root, the smaller the object it becomes. Here is one real-looking path, followed all the way down.</p>
+      </div>
+      <ol class="ladder">
+        <li class="rung"><span class="depth">0</span><div><h3>Universe</h3><p class="files">Shaped like the hardware: SSD slab, HDD platters, USB stick, SD card, disc</p></div><p class="seg"><b>C:\</b></p></li>
+        <li class="rung"><span class="depth">1</span><div><h3>Spiral galaxy</h3><p class="files">Files are stars along the spiral arms</p></div><p class="seg">C:\<b>Users</b></p></li>
+        <li class="rung"><span class="depth">2</span><div><h3>Galaxy region (nebula)</h3><p class="files">Stars spread through the nebula volume</p></div><p class="seg">C:\Users\<b>you</b></p></li>
+        <li class="rung"><span class="depth">3</span><div><h3>Globular star cluster</h3><p class="files">Stars packed into a dense ball</p></div><p class="seg">…\you\<b>Pictures</b></p></li>
+        <li class="rung"><span class="depth">4</span><div><h3>Planetary system</h3><p class="files">Files are exoplanets on Keplerian orbits. Photos are wrapped onto them as textures</p></div><p class="seg">…\Pictures\<b>2024</b></p></li>
+        <li class="rung"><span class="depth">5</span><div><h3>Planet</h3><p class="files">Terrestrial or gas giant. Files grow as crystals on the surface</p></div><p class="seg">…\2024\<b>Lapland</b></p></li>
+        <li class="rung"><span class="depth">6</span><div><h3>Moon</h3><p class="files">Crystals on the surface. Craters follow its curve</p></div><p class="seg">…\Lapland\<b>Day 3</b></p></li>
+        <li class="rung"><span class="depth">7</span><div><h3>Crater</h3><p class="files">Files are pebbles on the crater floor</p></div><p class="seg">…\Day 3\<b>RAW</b></p></li>
+        <li class="rung"><span class="depth">8</span><div><h3>Rock</h3><p class="files">Pebbles in shells around the rock</p></div><p class="seg">…\RAW\<b>rejects</b></p></li>
+        <li class="rung"><span class="depth">9</span><div><h3>Sand grain</h3><p class="files">Quartz, surrounded by particles</p></div><p class="seg">…\rejects\<b>old</b></p></li>
+        <li class="rung forever"><span class="depth">10+</span><div><h3>Microbe → molecule → atom → quantum particle</h3><p class="files">Then the cycle repeats at a smaller scale, forever</p></div><p class="seg">…\old\<b>backup</b>\…</p></li>
+      </ol>
+      <p class="ladder-note">There is no depth limit. The scene is always re-rooted at the folder you are in, so depth 50 is as precise and as fast as depth 1. Entering a folder zooms the camera into it, and the same object becomes the new centre at the same size on screen.</p>
+    </div>
+  </section>
+
+  <section id="scale">
+    <div class="wrap scale-grid">
+      <div class="scale-copy">
+        <p class="eyebrow">Size → visual size</p>
+        <h2>A terabyte is only twelve times bigger than a kilobyte</h2>
+        <p class="lede">Byte counts span twelve orders of magnitude, so sizes are compressed on a log scale. Big folders still look big, and small ones stay visible. The properties panel always shows the exact byte count next to the radius.</p>
+        <div class="formula" aria-label="radius equals 0.12 times 1.32 to the power of log base 10 of bytes">radius = 0.12 · 1.32<sup>log₁₀(bytes)</sup></div>
+      </div>
+      <figure class="scale-figure" style="margin:0">
+        <svg id="scale-svg" viewBox="0 0 600 260" role="img" aria-label="Circles drawn to scale: 1 KB radius 0.28, 1 MB 0.64, 100 MB 1.1, 1 GB 1.46, 100 GB 2.5, 1 TB 3.4 units"></svg>
+      </figure>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">What you get</p>
+        <h2>A real file explorer under the starfield</h2>
+      </div>
+      <div class="features">
+        <div class="feature"><h3>Opens files like Explorer</h3><p>Double-click a folder to fly into it. Double-click a file to open it in its default app.</p></div>
+        <div class="feature"><h3>Safely remove drives</h3><p>Right-click a USB stick or SD card to eject it. If a program still has files open, the app says so. Multi-slot card readers are handled as one device.</p></div>
+        <div class="feature"><h3>Hot-plug</h3><p>New drives fade in within two seconds. Unplug the drive you are in and its universe dissolves, then you return to This PC.</p></div>
+        <div class="feature"><h3>Previews</h3><p>Image thumbnails, video frames and audio waveforms in the properties panel. Install ffmpeg to get frames and waveforms for MP3, FLAC, OGG and M4A.</p></div>
+        <div class="feature"><h3>Search</h3><p>Name search with <code>*</code> and <code>?</code> wildcards below the current folder, or across every drive. Double-click a result to fly to it.</p></div>
+        <div class="feature"><h3>Built for big disks</h3><p>Instanced rendering keeps 20,000 objects at about 40 fps on a GTX 1650. Folder sizes are measured once in the background and cached.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="controls">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Controls</p>
+        <h2>Mouse or keyboard, your pick</h2>
+        <p class="lede">You never have to hit tiny objects with the mouse. The sidebar lists everything in view, and clicking an entry flies the camera to it.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Action</th><th scope="col">Mouse</th><th scope="col">Keyboard</th></tr></thead>
+          <tbody>
+            <tr><td>Rotate</td><td>Left-drag</td><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td></tr>
+            <tr><td>Pan</td><td>Right or middle-drag, Shift+left-drag</td><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td></tr>
+            <tr><td>Zoom</td><td>Wheel</td><td><kbd>+</kbd> <kbd>−</kbd></td></tr>
+            <tr><td>Select</td><td>Click</td><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td></tr>
+            <tr><td>Enter folder or open file</td><td>Double-click</td><td><kbd>Enter</kbd></td></tr>
+            <tr><td>Safely remove a drive</td><td>Right-click it in Universes</td><td><kbd>Ctrl+E</kbd></td></tr>
+            <tr><td>Back, up</td><td>Toolbar</td><td><kbd>Alt+←</kbd> <kbd>Alt+↑</kbd> <kbd>Backspace</kbd></td></tr>
+            <tr><td>This PC</td><td>Toolbar</td><td><kbd>Alt+Home</kbd></td></tr>
+            <tr><td>Focus on selection</td><td>—</td><td><kbd>F</kbd></td></tr>
+            <tr><td>Search · Go to path · Refresh</td><td>Toolbar</td><td><kbd>Ctrl+F</kbd> <kbd>Ctrl+L</kbd> <kbd>F5</kbd></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="wrap setup">
+      <div>
+        <div class="section-head" style="margin-bottom:28px">
+          <p class="eyebrow">Install</p>
+          <h2>Running in a minute</h2>
+        </div>
+        <ol class="steps">
+          <li><div><h3 style="font-size:1rem">Get Python 3.12 or newer</h3><p>From python.org, with the <code>py</code> launcher. No administrator rights needed.</p></div></li>
+          <li><div><h3 style="font-size:1rem">Download the source</h3><p>Clone <a href="https://github.com/cmdman-urlman/File-universe" target="_blank" rel="noopener">the repository</a> or download it as a ZIP.</p></div></li>
+          <li><div><h3 style="font-size:1rem">Install and launch</h3><p>Run the two commands in the project folder. The app starts at This PC, with every drive as its own universe.</p></div></li>
+        </ol>
+      </div>
+      <div>
+        <div class="terminal">
+          <div class="terminal-head"><span>Command Prompt</span><button class="copy" id="copy-btn" type="button">Copy</button></div>
+<pre id="cmds"><span class="c">rem install dependencies</span>
+py -m pip install -r requirements.txt
+<span class="c">rem launch</span>
+py main.py
+<span class="c">rem or start inside a folder</span>
+py main.py --path "C:\Users"</pre>
+        </div>
+        <div class="req" aria-label="Requirements">
+          <span class="chip">Windows 10 / 11</span><span class="chip">Python 3.12+</span><span class="chip">OpenGL 3.3 GPU</span><span class="chip">PyQt6 · PyOpenGL · numpy</span><span class="chip">ffmpeg optional</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>File Universe Explorer · Python, PyQt6 and hand-written GLSL</span>
+    <a href="https://github.com/cmdman-urlman/File-universe" target="_blank" rel="noopener">github.com/cmdman-urlman/File-universe</a>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -7,8 +7,9 @@ clusters, planetary systems, planets, moons, craters, rocks, sand grains and
 then an endless microscopic world. Everything you see comes from your actual
 disk: the names, paths, sizes, file types and folder relationships.
 
-Browsing is **strictly read-only**. The application never modifies, moves,
-renames, deletes, opens or executes your files.
+Browsing is **read-only**. The application never modifies, moves, renames or
+deletes your files. Double-clicking a file (or pressing Enter on it) opens it
+with its default application, just like Explorer.
 
 ## Setup (Windows 10/11, no administrator rights needed)
 
@@ -65,6 +66,8 @@ have a working install.)*
 | Zoom | wheel | + / − (PageUp/PageDown) |
 | Select | click | Tab / Shift+Tab cycles objects |
 | Enter folder / drive | double-click | Enter |
+| Open file in its default app | double-click | Enter |
+| Safely remove a USB/SD drive, eject a disc | right-click it in *Universes*, or toolbar ⏏ | Ctrl+E |
 | Focus camera on selection | — | F |
 | Back / forward / up | toolbar | Alt+← / Alt+→ / Alt+↑, Backspace |
 | Home (*This PC*) | toolbar | Alt+Home / Home |
@@ -208,8 +211,8 @@ integration.
   depth guard of 1,024 is also in place. Permission errors are counted and
   reported ("N folders skipped"), never fatal. Image decoding guards against
   decompression bombs (120 MP limit, 200 MB file limit). ffmpeg runs without a
-  shell, reading the file as data. Files are never opened with their
-  associated application.
+  shell, reading the file as data. Files are only opened with their
+  associated application when you double-click them (or press Enter).
 
 ## Limitations / known issues
 
@@ -228,7 +231,7 @@ integration.
   planetary-system folder). At other levels, image files show the picture as
   their icon.
 * Shell icon/thumbnail extraction can invoke third-party thumbnail handlers,
-  the same code Explorer runs. Files themselves are never executed.
+  the same code Explorer runs. Files are only opened when you double-click them.
 * Very large folders (20k+ objects) stay interactive (about 40 fps on a GTX
   1650 for 20,000 point-cloud objects), but integrated GPUs may drop lower.
 * Hot-plug was tested by simulating device removal (`--tour ... @unplug`).

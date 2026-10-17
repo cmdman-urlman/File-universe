@@ -2,17 +2,20 @@
 from __future__ import annotations
 
 import os
+import threading
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QKeySequence
 from PyQt6.QtWidgets import (QApplication, QDockWidget, QInputDialog, QLabel, QMainWindow, QMessageBox, QProgressBar,
                              QPushButton, QStatusBar, QToolBar, QWidget, QVBoxLayout)
 
 from devices.detection import DeviceMonitor
+from devices.eject import can_eject, drives_removed_together, safely_remove
 from devices.storage_info import DeviceInfo
 from filesystem.models import FSNode
 from filesystem.paths import depth_below, drive_root, norm_key, os_path, parent_path, split_ancestors
 from filesystem.service import ScanService
+from filesystem.threads import safe_emit
 from icons.loader import IconService
 from navigation.controller import History, Location, transition_mode
 from navigation.selection import SelectionModel
@@ -49,6 +52,8 @@ QScrollBar::handle:vertical { background: #2a3a5c; border-radius: 4px; }
 
 
 class MainWindow(QMainWindow):
+    eject_finished = pyqtSignal(object, bool, str)     # DeviceInfo, success, message
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("File Universe Explorer")
@@ -135,6 +140,9 @@ class MainWindow(QMainWindow):
         act("Go to path…", "Type a path to fly to", self._goto_path, "Ctrl+L")
         act("Search", "Search below the current location", self._focus_search, "Ctrl+F")
         tb.addSeparator()
+        act("⏏ Safely remove", "Safely remove the selected device, or the one you are browsing", self._eject_current,
+            "Ctrl+E")
+        tb.addSeparator()
         act("?", "About / help", self._about)
 
     def _build_status(self) -> None:
@@ -165,6 +173,8 @@ class MainWindow(QMainWindow):
         self.sidebar.device_activated.connect(self._on_device_activated)
         self.sidebar.object_selected.connect(self._on_list_select)
         self.sidebar.object_activated.connect(self._on_list_activate)
+        self.sidebar.eject_requested.connect(self.safely_remove)
+        self.eject_finished.connect(self._on_eject_finished)
         self.breadcrumb.path_clicked.connect(self._on_crumb)
         self.search_panel.search_requested.connect(self._start_search)
         self.search_panel.stop_requested.connect(self.scan.cancel_search)
@@ -291,6 +301,8 @@ class MainWindow(QMainWindow):
         if sc is None or sc.payload is not self.current_node or self.viewport.in_transition:
             return
         self._relayout_due = False
+        if sc.payload is None:      # home scene: devices, not folders - nothing to relayout
+            return
         layout_folder_scene(sc)
         self.sidebar.model.refresh()
         self._update_hud()
@@ -406,10 +418,18 @@ class MainWindow(QMainWindow):
             elif payload.is_dir:
                 self.navigate(Location(payload.path))
             else:
-                # files are never opened or executed - just inspect them
                 if idx is not None and idx > 0:
                     self._select_index(idx, focus=True)
-                self.status_label.setText(f"{payload.name}: files are inspected, never opened or executed.")
+                self._open_file(payload)
+
+    def _open_file(self, node: FSNode) -> None:
+        """Hand the file to Windows to open with its associated application, like Explorer does."""
+        try:
+            os.startfile(os_path(node.path))
+        except OSError as exc:
+            self.status_label.setText(f"{node.name}: could not open ({exc.strerror or exc})")
+        else:
+            self.status_label.setText(f"Opened {node.name}")
 
     def _on_view_activate(self, idx: int) -> None:
         sc = self.viewport.scene
@@ -460,6 +480,50 @@ class MainWindow(QMainWindow):
             self.status_label.setText("Disconnected: " + ", ".join(sorted(removed)))
         elif added and old_mounts:
             self.status_label.setText("Connected: " + ", ".join(sorted(added)))
+
+    def _eject_current(self) -> None:
+        sel = self.selection.payload
+        if isinstance(sel, DeviceInfo):
+            dev = sel
+        elif self.location is not None and self.location.path:
+            dev = self.device_for(self.location.path)
+        else:
+            dev = None
+        if dev is None:
+            self.status_label.setText("Select a device first (or right-click one in the Universes list).")
+        else:
+            self.safely_remove(dev)
+
+    def safely_remove(self, dev: DeviceInfo) -> None:
+        if not can_eject(dev):
+            self.status_label.setText(f"{dev.title} is not a removable device.")
+            return
+        if getattr(self, "_ejecting", False):
+            return
+        together = drives_removed_together(dev, self.devices)
+        if len(together) > 1:
+            names = "\n".join("  • " + d.title for d in together)
+            answer = QMessageBox.question(
+                self, "Safely remove",
+                f"{dev.title} shares one device with other drives (for example the slots of a card reader).\n"
+                f"Removing it removes all of these together:\n\n{names}\n\nContinue?")
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        self._ejecting = True
+        # release our own handles on the drive first: running listings, size walks and searches
+        self.scan.cancel_all()
+        self.status_label.setText(f"Preparing {dev.title} for safe removal…")
+        threading.Thread(target=lambda: safe_emit(self.eject_finished, dev, *safely_remove(dev)),
+                         daemon=True, name="eject").start()
+
+    def _on_eject_finished(self, dev: DeviceInfo, ok: bool, message: str) -> None:
+        self._ejecting = False
+        if ok:
+            self.monitor.refresh()     # the drive disappears through the normal hot-plug path
+            QTimer.singleShot(600, lambda: self.status_label.setText(message))
+        else:
+            QMessageBox.warning(self, "Safely remove", message)
+        self.status_label.setText(message)
 
     def _rebuild_home(self, removed: set[str]) -> None:
         old = self.viewport.scene
@@ -569,9 +633,9 @@ class MainWindow(QMainWindow):
             "Drive → universe → galaxy → nebula region → star cluster → planetary system → planet → moon → "
             "crater → rock → sand grain → microscopic worlds (endless).\n\n"
             "Mouse: left-drag rotate · right/middle-drag (or Shift+drag) pan · wheel zoom · click select · "
-            "double-click enter.\nKeys: arrows rotate · W/A/S/D pan · +/- zoom · Tab next object · F focus · "
+            "double-click enter / open file.\nKeys: arrows rotate · W/A/S/D pan · +/- zoom · Tab next object · F focus · "
             "Enter open folder · Backspace back · Home · R reset · F5 refresh · Ctrl+F search · Ctrl+L go to path.\n\n"
-            "Browsing is strictly read-only: nothing is ever modified, opened or executed."))
+            "Browsing is read-only: nothing is ever modified. Double-clicking a file opens it in its default app."))
 
     def shutdown(self) -> None:
         if getattr(self, "_shut", False):
