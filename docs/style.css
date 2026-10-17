@@ -54,6 +54,12 @@ section { padding-block: clamp(56px, 9vw, 104px); border-top: 1px solid var(--li
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 6px; font-weight: 600; font-size: 0.95rem; text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: var(--hull); }
 .btn.primary { background: var(--star); color: #1b1408; border-color: var(--star); }
 .btn:hover { filter: brightness(1.08); }
+.btn-icon { width: 16px; height: 16px; flex: none; }
+.download-note { margin-top: -10px; font-size: var(--step--1); color: var(--dim); }
+.download-panel { display: grid; gap: 12px; justify-items: start; padding: 20px; margin-bottom: 32px; background: var(--hull); border: 1px solid var(--line); border-radius: 8px; }
+.download-panel h3 { font-size: 1rem; font-weight: 600; }
+.download-panel p { color: var(--dim); font-size: 0.95rem; }
+.download-panel b { color: var(--ink); font-weight: 600; }
 .galaxy-frame { position: relative; aspect-ratio: 6 / 5; max-width: 100%; }
 #galaxy { width: 100%; height: 100%; display: block; }
 .galaxy-caption { position: absolute; left: 0; bottom: 0; font-family: var(--font-mono); font-size: 0.72rem; color: var(--dim); }
